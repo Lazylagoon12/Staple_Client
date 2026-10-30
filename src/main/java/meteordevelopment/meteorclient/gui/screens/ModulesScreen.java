@@ -18,6 +18,7 @@ import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Category;
+import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.misc.NbtUtils;
@@ -251,24 +252,53 @@ public class ModulesScreen extends TabScreen {
 
         @Override
         public void init() {
-            List<Module> moduleList = new ArrayList<>();
-            for (Category category : Modules.loopCategories()) {
-                for (Module module : Modules.get().getGroup(category)) {
-                    if (!Config.get().hiddenModules.get().contains(module)) {
-                        moduleList.add(module);
-                    }
-                }
-
-                // Ensure empty categories are not shown
-                if (!moduleList.isEmpty()) {
-                    windows.add(createCategory(this, category, moduleList));
-                    moduleList.clear();
-                }
+            // Staple's compact eight-column layout, ordered to match the reference.
+            List<Module> all = new ArrayList<>();
+            for (Module module : Modules.get().getAll()) {
+                if (!Config.get().hiddenModules.get().contains(module)) all.add(module);
             }
+
+            List<Module> combat = new ArrayList<>();
+            List<Module> hvh = new ArrayList<>();
+            List<Module> movement = new ArrayList<>();
+            List<Module> render = new ArrayList<>();
+            List<Module> cosmetics = new ArrayList<>();
+            List<Module> world = new ArrayList<>();
+            List<Module> player = new ArrayList<>();
+            List<Module> client = new ArrayList<>();
+
+            for (Module module : all) {
+                String name = module.name;
+                if (module.category.equals(Categories.Combat)) {
+                    if (List.of("Anchor Aura", "Crystal Aura", "Surround", "Auto Trap", "Auto Web", "Hole Filler").contains(name)) hvh.add(module);
+                    else combat.add(module);
+                } else if (module.category.equals(Categories.Movement)) movement.add(module);
+                else if (module.category.equals(Categories.Render)) render.add(module);
+                else if (module.category.equals(Categories.World)) world.add(module);
+                else if (module.category.equals(Categories.Player)) player.add(module);
+                else if (module.category.equals(Categories.Misc)) {
+                    if (name.toLowerCase().contains("cosmetic") || name.equals("Discord Presence")) cosmetics.add(module);
+                    else client.add(module);
+                } else client.add(module);
+            }
+
+            addColumn("Combat", combat);
+            addColumn("HVH", hvh);
+            addColumn("Movement", movement);
+            addColumn("Render", render);
+            addColumn("Cosmetics", cosmetics);
+            addColumn("World", world);
+            addColumn("Player", player);
+            addColumn("Client", client);
 
             windows.add(createSearch(this));
 
             refresh();
+        }
+
+        private void addColumn(String title, List<Module> modules) {
+            Category category = new Category(title);
+            windows.add(createCategory(this, category, modules));
         }
 
         protected void refresh() {
