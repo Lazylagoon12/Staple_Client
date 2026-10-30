@@ -167,6 +167,7 @@ public class ModulesScreen extends TabScreen {
             if (searchWindow != null) {
                 searchWindow.visible = true;
                 searchWindow.setExpanded(true);
+                if (controller != null) controller.invalidate();
             }
             if (searchTextBox != null) {
                 searchTextBox.setFocused(true);
@@ -239,6 +240,11 @@ public class ModulesScreen extends TabScreen {
 
     protected class WCategoryController extends WContainer {
         public final List<WWindow> windows = new ArrayList<>();
+
+        @Override
+        protected boolean propagateEvents(meteordevelopment.meteorclient.gui.widgets.WWidget widget) {
+            return widget.visible;
+        }
         private Cell<WWindow> favorites;
 
         @Override
