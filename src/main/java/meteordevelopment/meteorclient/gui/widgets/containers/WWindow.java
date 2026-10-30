@@ -138,7 +138,7 @@ public abstract class WWindow extends WVerticalList {
 
     protected abstract class WHeader extends WContainer {
         private final WWidget icon;
-        private WTriangle triangle;
+        protected WTriangle triangle;
         private WHorizontalList list;
 
         public WHeader(WWidget icon) {
