@@ -9,13 +9,16 @@ import com.mojang.datafixers.util.Pair;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.tabs.TabScreen;
 import meteordevelopment.meteorclient.gui.tabs.Tabs;
+import meteordevelopment.meteorclient.gui.tabs.builtin.ConfigTab;
+import meteordevelopment.meteorclient.gui.tabs.builtin.GuiTab;
 import meteordevelopment.meteorclient.gui.utils.Cell;
+import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.gui.widgets.containers.WSection;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.gui.widgets.containers.WWindow;
-import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
+import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Categories;
@@ -23,9 +26,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.misc.NbtUtils;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
-import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import net.minecraft.client.input.KeyEvent;
-import net.minecraft.world.item.Items;
 import org.apache.commons.lang3.SystemUtils;
 import org.jspecify.annotations.NonNull;
 
@@ -49,13 +50,6 @@ public class ModulesScreen extends TabScreen {
     @Override
     public void initWidgets() {
         controller = add(new WCategoryController()).widget();
-
-        // Help
-        if (theme.modulesHelpText()) {
-            WVerticalList help = add(theme.verticalList()).pad(4).bottom().widget();
-            help.add(theme.label("Left click - Toggle module"));
-            help.add(theme.label("Right click - Open module settings"));
-        }
     }
 
     @Override
@@ -64,104 +58,52 @@ public class ModulesScreen extends TabScreen {
         controller.refresh();
     }
 
-    // Category
-
-    protected WWindow createCategory(WContainer c, Category category, List<Module> moduleList) {
-        WWindow w = theme.window(category.name);
-        if (w instanceof meteordevelopment.meteorclient.gui.themes.meteor.widgets.WMeteorWindow meteorWindow) {
-            meteorWindow.setModules(moduleList);
-        }
-        w.id = category.name;
-        w.padding = 0;
-        w.spacing = 0;
-
-        if (theme.categoryIcons()) {
-            w.beforeHeaderInit = wContainer -> wContainer.add(theme.item(category.icon.get())).pad(2);
-        }
-
-        c.add(w);
-        w.view.scrollOnlyWhenMouseOver = true;
-        w.view.hasScrollBar = false;
-        w.view.spacing = 0;
-
-        for (Module module : moduleList) {
-            w.add(theme.module(module)).expandX();
-        }
-
-        return w;
-    }
-
-    // Search
-
     protected void createSearchW(WContainer w, String text) {
-        if (!text.isEmpty()) {
-            // Titles
-            List<Pair<Module, String>> modules = Modules.get().searchTitles(text);
+        if (text.isEmpty()) return;
 
-            if (!modules.isEmpty()) {
-                WSection section = w.add(theme.section("Modules")).expandX().widget();
-                section.spacing = 0;
-
-                int count = 0;
-                for (Pair<Module, String> p : modules) {
-                    if (count >= Config.get().moduleSearchCount.get() || count >= modules.size()) break;
-                    section.add(theme.module(p.getFirst(), p.getSecond())).expandX();
-                    count++;
-                }
+        List<Pair<Module, String>> modules = Modules.get().searchTitles(text);
+        if (!modules.isEmpty()) {
+            WSection section = w.add(theme.section("Modules")).expandX().widget();
+            for (Pair<Module, String> p : modules) {
+                if (section.cells.size() >= Config.get().moduleSearchCount.get()) break;
+                section.add(theme.module(p.getFirst(), p.getSecond())).expandX();
             }
+        }
 
-            // Settings
-            Set<Module> settings = Modules.get().searchSettingTitles(text);
-
-            if (!settings.isEmpty()) {
-                WSection section = w.add(theme.section("Settings")).expandX().widget();
-                section.spacing = 0;
-
-                int count = 0;
-                for (Module module : settings) {
-                    if (count >= Config.get().moduleSearchCount.get() || count >= settings.size()) break;
-                    section.add(theme.module(module)).expandX();
-                    count++;
-                }
+        Set<Module> settings = Modules.get().searchSettingTitles(text);
+        if (!settings.isEmpty()) {
+            WSection section = w.add(theme.section("Settings")).expandX().widget();
+            for (Module module : settings) {
+                if (section.cells.size() >= Config.get().moduleSearchCount.get()) break;
+                section.add(theme.module(module)).expandX();
             }
         }
     }
 
-    protected WWindow createSearch(WContainer c) {
-        WWindow w = theme.window("Search");
-        w.id = "search";
-        searchWindow = w;
-        w.visible = false;
+    protected WWindow createSearch(WContainer parent) {
+        WWindow window = theme.window("Search");
+        window.id = "search";
+        searchWindow = window;
+        window.visible = false;
+        parent.add(window);
+        window.view.scrollOnlyWhenMouseOver = true;
+        window.view.hasScrollBar = true;
 
-        if (theme.categoryIcons()) {
-            w.beforeHeaderInit = wContainer -> wContainer.add(theme.item(DisplayItemUtils.toStack(Items.COMPASS))).pad(2);
-        }
-
-        c.add(w);
-        w.view.scrollOnlyWhenMouseOver = true;
-        w.view.hasScrollBar = false;
-        w.view.maxHeight -= 20;
-
-        WVerticalList l = theme.verticalList();
-
-        WTextBox text = w.add(theme.textBox("")).minWidth(140).expandX().widget();
+        WVerticalList results = theme.verticalList();
+        WTextBox text = window.add(theme.textBox("")).minWidth(180).expandX().widget();
         text.setFocused(true);
         searchTextBox = text;
         text.action = () -> {
-            l.clear();
-            createSearchW(l, text.get());
+            results.clear();
+            createSearchW(results, text.get());
         };
-
-        w.add(l).expandX();
-        createSearchW(l, text.get());
-
-        return w;
+        window.add(results).expandX();
+        return window;
     }
 
     @Override
     public boolean keyPressed(@NonNull KeyEvent input) {
         if (locked) return false;
-
         boolean ctrl = SystemUtils.IS_OS_MAC
             ? Input.modsMatch(input.modifiers(), MOD_SUPER)
             : Input.modsMatch(input.modifiers(), MOD_CONTROL);
@@ -170,59 +112,15 @@ public class ModulesScreen extends TabScreen {
             if (searchWindow != null) {
                 searchWindow.visible = true;
                 searchWindow.setExpanded(true);
-                if (controller != null) controller.invalidate();
+                controller.invalidate();
             }
             if (searchTextBox != null) {
                 searchTextBox.setFocused(true);
                 searchTextBox.setCursorMax();
             }
-
             return true;
         }
-
         return super.keyPressed(input);
-    }
-
-    // Favorites
-
-    protected Cell<WWindow> createFavorites(WContainer c) {
-        boolean hasFavorites = Modules.get().getAll().stream().anyMatch(module -> module.favorite);
-        if (!hasFavorites) return null;
-
-        WWindow w = theme.window("Favorites");
-        w.id = "favorites";
-        w.padding = 0;
-        w.spacing = 0;
-
-        if (theme.categoryIcons()) {
-            w.beforeHeaderInit = wContainer -> wContainer.add(theme.item(DisplayItemUtils.toStack(Items.NETHER_STAR))).pad(2);
-        }
-
-        Cell<WWindow> cell = c.add(w);
-        w.view.scrollOnlyWhenMouseOver = true;
-        w.view.hasScrollBar = false;
-        w.view.spacing = 0;
-
-        createFavoritesW(w);
-        return cell;
-    }
-
-    protected boolean createFavoritesW(WWindow w) {
-        List<Module> modules = new ArrayList<>();
-
-        for (Module module : Modules.get().getAll()) {
-            if (module.favorite) {
-                modules.add(module);
-            }
-        }
-
-        modules.sort((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.name, o2.name));
-
-        for (Module module : modules) {
-            w.add(theme.module(module)).expandX();
-        }
-
-        return !modules.isEmpty();
     }
 
     @Override
@@ -239,119 +137,259 @@ public class ModulesScreen extends TabScreen {
     public void reload() {
     }
 
-    // Stuff
-
-    protected class WCategoryController extends WContainer {
-        public final List<WWindow> windows = new ArrayList<>();
+    private class WCategoryController extends WContainer {
+        private final List<WWindow> categoryWindows = new ArrayList<>();
+        private final List<WNavButton> categoryButtons = new ArrayList<>();
+        private Cell<WWindow> favorites;
+        private String selected = "Combat";
 
         @Override
-        protected boolean propagateEvents(meteordevelopment.meteorclient.gui.widgets.WWidget widget) {
+        protected boolean propagateEvents(WWidget widget) {
             return widget.visible;
         }
-        private Cell<WWindow> favorites;
 
         @Override
         public void init() {
-            // Staple's compact eight-column layout, ordered to match the reference.
             List<Module> all = new ArrayList<>();
             for (Module module : Modules.get().getAll()) {
                 if (!Config.get().hiddenModules.get().contains(module)) all.add(module);
             }
 
             List<Module> combat = new ArrayList<>();
-            List<Module> hvh = new ArrayList<>();
             List<Module> movement = new ArrayList<>();
             List<Module> render = new ArrayList<>();
-            List<Module> cosmetics = new ArrayList<>();
-            List<Module> world = new ArrayList<>();
             List<Module> player = new ArrayList<>();
-            List<Module> client = new ArrayList<>();
+            List<Module> world = new ArrayList<>();
+            List<Module> misc = new ArrayList<>();
 
             for (Module module : all) {
-                String name = module.name;
-                if (module.category.equals(Categories.Combat)) {
-                    if (List.of("Anchor Aura", "Crystal Aura", "Surround", "Auto Trap", "Auto Web", "Hole Filler").contains(name)) hvh.add(module);
-                    else combat.add(module);
-                } else if (module.category.equals(Categories.Movement)) movement.add(module);
+                if (module.category.equals(Categories.Combat)) combat.add(module);
+                else if (module.category.equals(Categories.Movement)) movement.add(module);
                 else if (module.category.equals(Categories.Render)) render.add(module);
-                else if (module.category.equals(Categories.World)) world.add(module);
                 else if (module.category.equals(Categories.Player)) player.add(module);
-                else if (module.category.equals(Categories.Misc)) {
-                    if (name.toLowerCase().contains("cosmetic") || name.equals("Discord Presence") || name.equals("Better Chat")) cosmetics.add(module);
-                    else client.add(module);
-                } else client.add(module);
+                else if (module.category.equals(Categories.World)) world.add(module);
+                else misc.add(module);
             }
 
-            addColumn("Combat", combat);
-            addColumn("HVH", hvh);
-            addColumn("Movement", movement);
-            addColumn("Render", render);
-            addColumn("Cosmetics", cosmetics);
-            addColumn("World", world);
-            addColumn("Player", player);
-            addColumn("Client", client);
+            addCategory("Combat", combat);
+            addCategory("Movement", movement);
+            addCategory("Render", render);
+            addCategory("Player", player);
+            addCategory("World", world);
+            addCategory("Misc", misc);
 
-            windows.add(createSearch(this));
+            add(new WPanelAction("Top Bar", () -> Tabs.get(GuiTab.class).openScreen(theme)));
+            add(new WPanelAction("Configs", () -> Tabs.get(ConfigTab.class).openScreen(theme)));
+            add(new WPanelAction("Modules", () -> select("Combat")));
+            add(new WPanelAction("ClickGUI", () -> Tabs.get(GuiTab.class).openScreen(theme)));
+            add(new WPanelAction("Themes", () -> Tabs.get(GuiTab.class).openScreen(theme)));
+            add(new WPanelAction("Settings", () -> Tabs.get(ConfigTab.class).openScreen(theme)));
 
+            createSearch(this);
             refresh();
         }
 
-        private void addColumn(String title, List<Module> modules) {
-            Category category = new Category(title);
-            windows.add(createCategory(this, category, modules));
+        private void addCategory(String name, List<Module> modules) {
+            WNavButton button = add(new WNavButton(name, () -> select(name))).widget();
+            categoryButtons.add(button);
+
+            WWindow window = theme.window(name);
+            window.id = "staple-" + name.toLowerCase();
+            window.padding = 5;
+            window.spacing = 7;
+            window.visible = name.equals(selected);
+            window.view.scrollOnlyWhenMouseOver = true;
+            window.view.hasScrollBar = true;
+            window.view.spacing = 7;
+            window.minWidth = 220;
+
+            List<Module> first = new ArrayList<>();
+            List<Module> second = new ArrayList<>();
+            for (int i = 0; i < modules.size(); i++) {
+                (i % 2 == 0 ? first : second).add(modules.get(i));
+            }
+
+            WContainer grid = new WContainer() {
+                @Override
+                protected void onCalculateSize() {
+                    width = 0;
+                    height = 0;
+                    for (Cell<?> cell : cells) {
+                        width += cell.widget().width;
+                        height = Math.max(height, cell.widget().height);
+                    }
+                }
+
+                @Override
+                protected void onCalculateWidgetPositions() {
+                    double gap = theme.scale(8);
+                    double cardWidth = Math.max(theme.scale(150), (width - gap) / 2);
+                    double leftX = x;
+                    double rightX = x + cardWidth + gap;
+                    for (int i = 0; i < cells.size(); i++) {
+                        Cell<?> cell = cells.get(i);
+                        cell.x = (i < first.size() ? leftX : rightX);
+                        cell.y = y + (i < first.size() ? i : i - first.size()) * (theme.scale(58) + gap);
+                        cell.width = cardWidth;
+                        cell.height = cell.widget().height;
+                        cell.widget().width = cardWidth;
+                        cell.widget().calculateWidgetPositions();
+                    }
+                    height = Math.max(first.size(), second.size()) * (theme.scale(58) + gap);
+                }
+            };
+            grid.spacing = 8;
+            for (int i = 0; i < Math.max(first.size(), second.size()); i++) {
+                if (i < first.size()) grid.add(theme.module(first.get(i))).expandX();
+                if (i < second.size()) grid.add(theme.module(second.get(i))).expandX();
+            }
+            window.add(grid).expandX();
+            add(window);
+            categoryWindows.add(window);
+        }
+
+        private void select(String name) {
+            selected = name;
+            for (WWindow window : categoryWindows) window.visible = window.titleEquals(name);
+            for (WNavButton button : categoryButtons) button.active = button.label.equals(name);
+            invalidate();
         }
 
         protected void refresh() {
             if (favorites == null) {
-                favorites = createFavorites(this);
-                if (favorites != null) windows.add(favorites.widget());
-            } else {
-                favorites.widget().clear();
-
-                if (!createFavoritesW(favorites.widget())) {
-                    remove(favorites);
-                    windows.remove(favorites.widget());
-                    favorites = null;
+                boolean hasFavorites = Modules.get().getAll().stream().anyMatch(module -> module.favorite);
+                if (hasFavorites) {
+                    WWindow window = theme.window("Favorites");
+                    window.id = "favorites";
+                    window.padding = 5;
+                    window.spacing = 6;
+                    favorites = add(window);
+                    window.view.scrollOnlyWhenMouseOver = true;
+                    window.view.hasScrollBar = true;
+                    for (Module module : Modules.get().getAll()) if (module.favorite) window.add(theme.module(module)).expandX();
                 }
             }
         }
 
         @Override
         protected void onCalculateWidgetPositions() {
-            double pad = theme.scale(6);
-            double windowWidth = getWindowWidth();
-            double windowHeight = getWindowHeight();
-            List<Cell<?>> categoryCells = cells.stream()
-                .filter(cell -> cell.widget() instanceof WWindow w && !"search".equals(w.id) && !"favorites".equals(w.id))
-                .toList();
-            int columns = Math.max(1, categoryCells.size());
-            double columnWidth = Math.min(theme.scale(156), Math.max(theme.scale(116), (windowWidth - pad * (columns + 1)) / columns));
-            double logicalColumnWidth = columnWidth / theme.scale(1);
-            double x = pad;
-            for (Cell<?> cell : cells) {
-                WWidget widget = cell.widget();
-                if (widget instanceof WWindow w && "search".equals(w.id)) {
-                    if (!w.visible) continue;
-                    w.minWidth = Math.min(theme.scale(260), windowWidth - pad * 2) / theme.scale(1);
-                    w.calculateSize();
-                    cell.x = Math.max(pad, (windowWidth - w.width) / 2);
-                    cell.y = Math.max(pad, (windowHeight - w.height) / 2);
-                } else if (widget instanceof WWindow w && "favorites".equals(w.id)) {
-                    w.minWidth = logicalColumnWidth;
-                    w.calculateSize();
-                    cell.x = pad;
-                    cell.y = Math.max(pad, windowHeight - w.height - pad);
-                } else {
-                    widget.minWidth = logicalColumnWidth;
-                    widget.calculateSize();
-                    cell.x = x;
-                    cell.y = pad;
-                    x += columnWidth + pad;
-                }
-                cell.width = widget.width;
-                cell.height = widget.height;
-                cell.alignWidget();
+            double pad = theme.scale(18);
+            double gap = theme.scale(14);
+            double screenW = getWindowWidth();
+            double screenH = getWindowHeight();
+            double leftW = theme.scale(164);
+            double rightW = theme.scale(210);
+            double centerX = pad + leftW + gap;
+            double centerW = Math.max(theme.scale(300), screenW - centerX - rightW - gap - pad);
+            double top = theme.scale(72);
+            double bottom = screenH - theme.scale(24);
+            double contentH = bottom - top;
+
+            for (int i = 0; i < categoryButtons.size(); i++) {
+                WNavButton button = categoryButtons.get(i);
+                button.width = leftW;
+                button.height = theme.scale(42);
+                button.x = pad;
+                button.y = top + i * theme.scale(49);
+                button.calculateWidgetPositions();
             }
+
+            for (WWindow window : categoryWindows) {
+                window.x = centerX;
+                window.y = top;
+                window.width = centerW;
+                window.minWidth = centerW / theme.scale(1);
+                window.height = contentH;
+                window.calculateSize();
+                window.width = centerW;
+                window.height = contentH;
+                window.calculateWidgetPositions();
+            }
+
+            int actionIndex = 0;
+            for (Cell<?> cell : cells) {
+                if (cell.widget() instanceof WPanelAction action) {
+                    action.x = screenW - pad - rightW;
+                    action.y = top + theme.scale(46) + actionIndex * theme.scale(54);
+                    action.width = rightW;
+                    action.height = theme.scale(44);
+                    action.calculateWidgetPositions();
+                    actionIndex++;
+                } else if (cell.widget() instanceof WWindow window && "search".equals(window.id)) {
+                    window.x = centerX;
+                    window.y = theme.scale(18);
+                    window.width = centerW;
+                    window.minWidth = centerW / theme.scale(1);
+                    window.calculateSize();
+                    window.calculateWidgetPositions();
+                } else if (cell.widget() instanceof WWindow window && "favorites".equals(window.id)) {
+                    window.x = pad;
+                    window.y = screenH - theme.scale(70);
+                    window.width = leftW;
+                    window.minWidth = leftW / theme.scale(1);
+                    window.calculateSize();
+                    window.calculateWidgetPositions();
+                }
+            }
+        }
+
+        private class WNavButton extends WPressable {
+            private final String label;
+            private final Runnable action;
+            private boolean active;
+
+            private WNavButton(String label, Runnable action) {
+                this.label = label;
+                this.action = action;
+            }
+
+            @Override
+            protected void onPressed(int button) {
+                if (button == MOUSE_BUTTON_LEFT) action.run();
+            }
+
+            @Override
+            protected void onRender(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double mouseX, double mouseY, double delta) {
+                boolean selected = active || mouseOver;
+                ColorPair.draw(renderer, x, y, width, height, selected);
+                renderer.text(label, x + theme.scale(16), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
+            }
+        }
+
+        private class WPanelAction extends WPressable {
+            private final String label;
+            private final Runnable action;
+
+            private WPanelAction(String label, Runnable action) {
+                this.label = label;
+                this.action = action;
+            }
+
+            @Override
+            protected void onPressed(int button) {
+                if (button == MOUSE_BUTTON_LEFT) action.run();
+            }
+
+            @Override
+            protected void onRender(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double mouseX, double mouseY, double delta) {
+                ColorPair.draw(renderer, x, y, width, height, mouseOver);
+                renderer.text(label, x + theme.scale(15), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
+            }
+        }
+    }
+
+    private static class ColorPair {
+        private static void draw(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double x, double y, double width, double height, boolean active) {
+            meteordevelopment.meteorclient.utils.render.color.Color left = active
+                ? new meteordevelopment.meteorclient.utils.render.color.Color(89, 36, 205, 235)
+                : new meteordevelopment.meteorclient.utils.render.color.Color(35, 31, 62, 225);
+            meteordevelopment.meteorclient.utils.render.color.Color right = active
+                ? new meteordevelopment.meteorclient.utils.render.color.Color(111, 62, 224, 235)
+                : new meteordevelopment.meteorclient.utils.render.color.Color(45, 39, 75, 225);
+            double radius = Math.min(height / 2, width / 2);
+            renderer.quad(x + radius, y, width - radius * 2, height, left, right);
+            renderer.quad(x, y, height, height, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, left);
+            renderer.quad(x + width - height, y, height, height, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, right);
         }
     }
 }
