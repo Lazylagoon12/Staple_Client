@@ -302,12 +302,12 @@ public class ModulesScreen extends TabScreen {
                 WWidget widget = cell.widget();
                 if (widget instanceof WWindow w && "search".equals(w.id)) {
                     if (!w.visible) continue;
-                    w.minWidth = Math.min(theme.scale(260), windowWidth - pad * 2);
+                    w.minWidth = Math.min(theme.scale(260), windowWidth - pad * 2) / theme.scale(1);
                     w.calculateSize();
                     cell.x = Math.max(pad, (windowWidth - w.width) / 2);
                     cell.y = Math.max(pad, (windowHeight - w.height) / 2);
                 } else if (widget instanceof WWindow w && "favorites".equals(w.id)) {
-                    w.minWidth = columnWidth;
+                    w.minWidth = logicalColumnWidth;
                     w.calculateSize();
                     cell.x = pad;
                     cell.y = Math.max(pad, windowHeight - w.height - pad);
