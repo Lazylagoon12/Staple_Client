@@ -65,7 +65,7 @@ public class WMeteorWindow extends WWindow implements MeteorWidget {
             WHorizontalList row = theme().horizontalList();
             row.spacing = 1;
             add(row).expandX().widget();
-            row.add(theme().label(title, true)).expandCellX().left().centerY().pad(5);
+            row.add(theme().label(title, true)).expandCellX().centerY().pad(5);
             if (modules != null) {
                 countLabel = theme().label(moduleCount(), false);
                 row.add(countLabel).right().centerY().pad(3);
