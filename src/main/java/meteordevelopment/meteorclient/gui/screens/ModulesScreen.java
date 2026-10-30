@@ -66,8 +66,10 @@ public class ModulesScreen extends TabScreen {
     // Category
 
     protected WWindow createCategory(WContainer c, Category category, List<Module> moduleList) {
-        int activeCount = (int) moduleList.stream().filter(Module::isActive).count();
-        WWindow w = theme.window(category.name + "  " + activeCount + "/" + moduleList.size());
+        WWindow w = theme.window(category.name);
+        if (w instanceof meteordevelopment.meteorclient.gui.themes.meteor.widgets.WMeteorWindow meteorWindow) {
+            meteorWindow.setModules(moduleList);
+        }
         w.id = category.name;
         w.padding = 0;
         w.spacing = 0;
@@ -294,6 +296,7 @@ public class ModulesScreen extends TabScreen {
                 .toList();
             int columns = Math.max(1, categoryCells.size());
             double columnWidth = Math.max(theme.scale(116), (windowWidth - pad * (columns + 1)) / columns);
+            double logicalColumnWidth = columnWidth / theme.scale(1);
             double x = pad;
             for (Cell<?> cell : cells) {
                 WWidget widget = cell.widget();
@@ -309,7 +312,7 @@ public class ModulesScreen extends TabScreen {
                     cell.x = pad;
                     cell.y = Math.max(pad, windowHeight - w.height - pad);
                 } else {
-                    widget.minWidth = columnWidth;
+                    widget.minWidth = logicalColumnWidth;
                     widget.calculateSize();
                     cell.x = x;
                     cell.y = pad;
