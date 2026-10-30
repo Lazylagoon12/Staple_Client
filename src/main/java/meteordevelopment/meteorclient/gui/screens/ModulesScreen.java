@@ -65,7 +65,8 @@ public class ModulesScreen extends TabScreen {
     // Category
 
     protected WWindow createCategory(WContainer c, Category category, List<Module> moduleList) {
-        WWindow w = theme.window(category.name);
+        int activeCount = (int) moduleList.stream().filter(Module::isActive).count();
+        WWindow w = theme.window(category.name + "  " + activeCount + "/" + moduleList.size());
         w.id = category.name;
         w.padding = 0;
         w.spacing = 0;
@@ -285,7 +286,7 @@ public class ModulesScreen extends TabScreen {
                 double windowHeight = getWindowHeight();
 
                 if (x + cell.width > windowWidth) {
-                    x = x + pad;
+                    x = pad;
                     y += h;
                 }
 
