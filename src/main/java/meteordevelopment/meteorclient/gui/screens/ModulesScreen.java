@@ -191,6 +191,7 @@ public class ModulesScreen extends TabScreen {
 
         private void addCategory(String name, List<Module> modules) {
             WNavButton button = add(new WNavButton(name, () -> select(name))).widget();
+            button.active = name.equals(selected);
             categoryButtons.add(button);
 
             WWindow window = theme.window(name);
@@ -228,14 +229,14 @@ public class ModulesScreen extends TabScreen {
                     double rightX = x + cardWidth + gap;
                     for (int i = 0; i < cells.size(); i++) {
                         Cell<?> cell = cells.get(i);
-                        cell.x = (i < first.size() ? leftX : rightX);
-                        cell.y = y + (i < first.size() ? i : i - first.size()) * (theme.scale(58) + gap);
+                        cell.x = (i % 2 == 0 ? leftX : rightX);
+                        cell.y = y + (i / 2) * (theme.scale(58) + gap);
                         cell.width = cardWidth;
                         cell.height = cell.widget().height;
                         cell.widget().width = cardWidth;
                         cell.widget().calculateWidgetPositions();
                     }
-                    height = Math.max(first.size(), second.size()) * (theme.scale(58) + gap);
+                    height = ((cells.size() + 1) / 2) * (theme.scale(58) + gap);
                 }
             };
             grid.spacing = 8;
@@ -250,7 +251,7 @@ public class ModulesScreen extends TabScreen {
 
         private void select(String name) {
             selected = name;
-            for (WWindow window : categoryWindows) window.visible = window.titleEquals(name);
+            for (WWindow window : categoryWindows) window.visible = window.id.equals("staple-" + name.toLowerCase());
             for (WNavButton button : categoryButtons) button.active = button.label.equals(name);
             invalidate();
         }
