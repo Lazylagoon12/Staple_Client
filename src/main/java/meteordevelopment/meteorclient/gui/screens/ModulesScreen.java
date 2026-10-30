@@ -295,7 +295,7 @@ public class ModulesScreen extends TabScreen {
                 .filter(cell -> cell.widget() instanceof WWindow w && !"search".equals(w.id) && !"favorites".equals(w.id))
                 .toList();
             int columns = Math.max(1, categoryCells.size());
-            double columnWidth = Math.max(theme.scale(116), (windowWidth - pad * (columns + 1)) / columns);
+            double columnWidth = Math.min(theme.scale(156), Math.max(theme.scale(116), (windowWidth - pad * (columns + 1)) / columns));
             double logicalColumnWidth = columnWidth / theme.scale(1);
             double x = pad;
             for (Cell<?> cell : cells) {
