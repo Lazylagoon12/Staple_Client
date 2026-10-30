@@ -45,8 +45,8 @@ public class WMeteorWindow extends WWindow implements MeteorWidget {
             double bodyY = y + header.height;
             double bodyHeight = height - header.height;
             double radius = Math.min(theme().scale(5), Math.min(width / 2, bodyHeight / 2));
-            Color left = new Color(64, 55, 77, 148);
-            Color right = new Color(83, 71, 98, 148);
+            Color left = new Color(55, 42, 76, 184);
+            Color right = new Color(75, 55, 101, 184);
             renderer.quad(x, bodyY, width, Math.max(0, bodyHeight - radius), left, right);
             renderer.quad(x + radius, bodyY + bodyHeight - radius, width - radius * 2, radius, left, right);
             renderer.quad(x, bodyY + bodyHeight - radius * 2, radius * 2, radius * 2, GuiRenderer.CIRCLE, left);
@@ -78,15 +78,15 @@ public class WMeteorWindow extends WWindow implements MeteorWidget {
         @Override
         protected void onRender(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
             double radius = Math.min(theme().scale(5), Math.min(width / 2, height / 2));
-            Color left = new Color(137, 123, 157, 218);
-            Color right = new Color(88, 76, 107, 218);
+            Color left = new Color(151, 112, 205, 238);
+            Color right = new Color(102, 68, 157, 238);
             renderer.quad(x + radius, y, width - radius * 2, height, left, right);
             renderer.quad(x, y + radius, radius * 2, height - radius, left);
             renderer.quad(x + width - radius * 2, y + radius, radius * 2, height - radius, right);
             renderer.quad(x, y, radius * 2, radius * 2, GuiRenderer.CIRCLE, left);
             renderer.quad(x + width - radius * 2, y, radius * 2, radius * 2, GuiRenderer.CIRCLE, right);
             renderer.quad(x + radius, y + theme().scale(1), width - radius * 2, theme().scale(1),
-                new Color(239, 231, 248, 145));
+                new Color(244, 230, 255, 190));
             if (countLabel != null) countLabel.set(moduleCount());
         }
     }
