@@ -70,7 +70,7 @@ public class WMeteorWindow extends WWindow implements MeteorWidget {
                 countLabel = theme().label(moduleCount(), false);
                 row.add(countLabel).right().centerY().pad(3);
             }
-            WTriangle triangle = theme().triangle();
+            triangle = theme().triangle();
             row.add(triangle).right().centerY().pad(4);
             triangle.action = () -> setExpanded(!expanded);
         }
