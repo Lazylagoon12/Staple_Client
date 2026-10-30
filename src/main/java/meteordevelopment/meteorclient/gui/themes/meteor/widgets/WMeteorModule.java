@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.gui.themes.meteor.MeteorWidget;
 import meteordevelopment.meteorclient.gui.utils.AlignmentX;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.util.Mth;
 
 import static com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT;
@@ -43,7 +44,7 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
 
     @Override
     public double pad() {
-        return theme.scale(4);
+        return theme.scale(3);
     }
 
     @Override
@@ -52,8 +53,8 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
 
         if (titleWidth == 0) titleWidth = theme.textWidth(title);
 
-        width = Math.max(theme.scale(144), pad + titleWidth + pad);
-        height = pad + theme.textHeight() + pad;
+        width = Math.max(theme.scale(116), pad + titleWidth + pad);
+        height = theme.scale(20);
     }
 
     @Override
@@ -66,29 +67,24 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
     protected void onRender(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
         MeteorGuiTheme theme = theme();
         double pad = pad();
-
-        animationProgress1 += delta * 4 * ((module.isActive() || mouseOver) ? 1 : -1);
+        animationProgress1 += delta * 5 * ((module.isActive() || mouseOver) ? 1 : -1);
         animationProgress1 = Mth.clamp(animationProgress1, 0, 1);
-
-        animationProgress2 += delta * 6 * (module.isActive() ? 1 : -1);
+        animationProgress2 += delta * 7 * (module.isActive() ? 1 : -1);
         animationProgress2 = Mth.clamp(animationProgress2, 0, 1);
-
+        Color base = new Color(48, 43, 57, 112);
+        Color hover = new Color(178, 168, 190, 105);
+        renderer.quad(x, y, width, height, base, mouseOver ? hover : base);
+        renderer.quad(x, y, width, theme.scale(1), new Color(225, 218, 235, 95));
         if (animationProgress1 > 0) {
-            renderer.quad(x, y, width * animationProgress1, height, theme.moduleBackground.get());
+            renderer.quad(x, y, width * animationProgress1, height,
+                new Color(194, 184, 207, (int) (105 * animationProgress1)),
+                new Color(127, 113, 145, (int) (135 * animationProgress1)));
         }
         if (animationProgress2 > 0) {
-            renderer.quad(x, y + height * (1 - animationProgress2), theme.scale(2), height * animationProgress2, theme.accentColor.get());
+            renderer.quad(x, y + height - theme.scale(2), width * animationProgress2, theme.scale(2),
+                new Color(238, 231, 247, (int) (220 * animationProgress2)));
         }
-
-        double x = this.x + pad;
-        double w = width - pad * 2;
-
-        if (theme.moduleAlignment.get() == AlignmentX.Center) {
-            x += w / 2 - titleWidth / 2;
-        } else if (theme.moduleAlignment.get() == AlignmentX.Right) {
-            x += w - titleWidth;
-        }
-
-        renderer.text(title, x, y + pad, theme.textColor.get(), false);
+        double textX = this.x + pad + theme.scale(2);
+        renderer.text(title, textX, y + (height - theme.textHeight()) / 2, theme.textColor.get(), false);
     }
 }
