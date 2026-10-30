@@ -9,6 +9,7 @@ import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.themes.meteor.MeteorGuiTheme;
 import meteordevelopment.meteorclient.gui.themes.meteor.MeteorWidget;
 import meteordevelopment.meteorclient.gui.utils.AlignmentX;
+import meteordevelopment.meteorclient.gui.utils.AlignmentX;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -89,6 +90,11 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
         }
 
         double textX = this.x + pad + theme.scale(2);
+        if (theme.moduleAlignment.get() == AlignmentX.Center) {
+            textX = this.x + width / 2 - titleWidth / 2;
+        } else if (theme.moduleAlignment.get() == AlignmentX.Right) {
+            textX = this.x + width - pad - titleWidth;
+        }
         renderer.text(title, textX, y + (height - theme.textHeight()) / 2, theme.textColor.get(), false);
     }
 }
