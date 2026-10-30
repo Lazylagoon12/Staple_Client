@@ -52,7 +52,7 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
 
         if (titleWidth == 0) titleWidth = theme.textWidth(title);
 
-        width = pad + titleWidth + pad;
+        width = Math.max(theme.scale(144), pad + titleWidth + pad);
         height = pad + theme.textHeight() + pad;
     }
 
