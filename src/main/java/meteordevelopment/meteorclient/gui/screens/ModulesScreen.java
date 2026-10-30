@@ -127,6 +127,7 @@ public class ModulesScreen extends TabScreen {
         WWindow w = theme.window("Search");
         w.id = "search";
         searchWindow = w;
+        w.visible = false;
 
         if (theme.categoryIcons()) {
             w.beforeHeaderInit = wContainer -> wContainer.add(theme.item(DisplayItemUtils.toStack(Items.COMPASS))).pad(2);
@@ -162,7 +163,10 @@ public class ModulesScreen extends TabScreen {
             : Input.modsMatch(input.modifiers(), MOD_CONTROL);
 
         if (ctrl && input.key() == KEY_F) {
-            if (searchWindow != null) searchWindow.setExpanded(true);
+            if (searchWindow != null) {
+                searchWindow.visible = true;
+                searchWindow.setExpanded(true);
+            }
             if (searchTextBox != null) {
                 searchTextBox.setFocused(true);
                 searchTextBox.setCursorMax();
@@ -275,39 +279,38 @@ public class ModulesScreen extends TabScreen {
 
         @Override
         protected void onCalculateWidgetPositions() {
-            double pad = theme.scale(4);
-            double h = theme.scale(40);
-
-            double x = this.x + pad;
-            double y = this.y;
-
+            double pad = theme.scale(6);
+            double windowWidth = getWindowWidth();
+            double windowHeight = getWindowHeight();
+            List<Cell<?>> categoryCells = cells.stream()
+                .filter(cell -> cell.widget() instanceof WWindow w && !"search".equals(w.id) && !"favorites".equals(w.id))
+                .toList();
+            int columns = Math.max(1, categoryCells.size());
+            double columnWidth = Math.max(theme.scale(116), (windowWidth - pad * (columns + 1)) / columns);
+            double x = pad;
             for (Cell<?> cell : cells) {
-                double windowWidth = getWindowWidth();
-                double windowHeight = getWindowHeight();
-
-                if (x + cell.width > windowWidth) {
-                    x = pad;
-                    y += h;
+                WWidget widget = cell.widget();
+                if (widget instanceof WWindow w && "search".equals(w.id)) {
+                    if (!w.visible) continue;
+                    w.minWidth = Math.min(theme.scale(260), windowWidth - pad * 2);
+                    w.calculateSize();
+                    cell.x = Math.max(pad, (windowWidth - w.width) / 2);
+                    cell.y = Math.max(pad, (windowHeight - w.height) / 2);
+                } else if (widget instanceof WWindow w && "favorites".equals(w.id)) {
+                    w.minWidth = columnWidth;
+                    w.calculateSize();
+                    cell.x = pad;
+                    cell.y = Math.max(pad, windowHeight - w.height - pad);
+                } else {
+                    widget.minWidth = columnWidth;
+                    widget.calculateSize();
+                    cell.x = x;
+                    cell.y = pad;
+                    x += columnWidth + pad;
                 }
-
-                if (x > windowWidth) {
-                    x = windowWidth / 2.0 - cell.width / 2.0;
-                    if (x < 0) x = 0;
-                }
-                if (y > windowHeight) {
-                    y = windowHeight / 2.0 - cell.height / 2.0;
-                    if (y < 0) y = 0;
-                }
-
-                cell.x = x;
-                cell.y = y;
-
-                cell.width = cell.widget().width;
-                cell.height = cell.widget().height;
-
+                cell.width = widget.width;
+                cell.height = widget.height;
                 cell.alignWidget();
-
-                x += cell.width + pad;
             }
         }
     }
