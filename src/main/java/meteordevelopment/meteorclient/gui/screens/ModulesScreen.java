@@ -215,10 +215,8 @@ public class ModulesScreen extends TabScreen {
                 protected void onCalculateSize() {
                     width = 0;
                     height = 0;
-                    for (Cell<?> cell : cells) {
-                        width += cell.widget().width;
-                        height = Math.max(height, cell.widget().height);
-                    }
+                    for (Cell<?> cell : cells) width += cell.widget().width;
+                    height = ((cells.size() + 1) / 2) * (theme.scale(58) + theme.scale(8));
                 }
 
                 @Override
