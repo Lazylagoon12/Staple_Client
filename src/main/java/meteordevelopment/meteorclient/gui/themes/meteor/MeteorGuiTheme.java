@@ -90,8 +90,8 @@ public class MeteorGuiTheme extends GuiTheme {
 
     // Colors
 
-    public final Setting<SettingColor> accentColor = color("accent", "Main color of the GUI.", new SettingColor(145, 61, 226));
-    public final Setting<SettingColor> checkboxColor = color("checkbox", "Color of checkbox.", new SettingColor(145, 61, 226));
+    public final Setting<SettingColor> accentColor = color("accent", "Main color of the GUI.", new SettingColor(126, 108, 151, 210));
+    public final Setting<SettingColor> checkboxColor = color("checkbox", "Color of checkbox.", new SettingColor(126, 108, 151, 210));
     public final Setting<SettingColor> plusColor = color("plus", "Color of plus button.", new SettingColor(50, 255, 50));
     public final Setting<SettingColor> minusColor = color("minus", "Color of minus button.", new SettingColor(255, 50, 50));
     public final Setting<SettingColor> favoriteColor = color("favorite", "Color of checked favorite button.", new SettingColor(250, 215, 0));
@@ -110,12 +110,12 @@ public class MeteorGuiTheme extends GuiTheme {
     public final ThreeStateColorSetting backgroundColor = new ThreeStateColorSetting(
         sgBackgroundColors,
         "background",
-        new SettingColor(20, 20, 20, 200),
-        new SettingColor(30, 30, 30, 200),
-        new SettingColor(40, 40, 40, 200)
+        new SettingColor(58, 49, 70, 168),
+        new SettingColor(70, 59, 82, 180),
+        new SettingColor(82, 70, 95, 190)
     );
 
-    public final Setting<SettingColor> moduleBackground = color(sgBackgroundColors, "module-background", "Color of module background when active.", new SettingColor(50, 50, 50));
+    public final Setting<SettingColor> moduleBackground = color(sgBackgroundColors, "module-background", "Color of module background when active.", new SettingColor(174, 163, 188, 125));
 
     // Outline
 
