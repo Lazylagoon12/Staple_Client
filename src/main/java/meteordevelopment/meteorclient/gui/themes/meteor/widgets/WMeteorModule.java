@@ -37,8 +37,8 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
             animationProgress1 = 1;
             animationProgress2 = 1;
         } else {
-            animationProgress1 = 0.28;
-            animationProgress2 = 0.28;
+            animationProgress1 = 0;
+            animationProgress2 = 0;
         }
     }
 
@@ -69,16 +69,12 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
         double pad = pad();
         boolean highlighted = module.isActive() || mouseOver;
         animationProgress1 += delta * 7 * (highlighted ? 1 : -1);
-        animationProgress1 = Mth.clamp(animationProgress1, 0.28, 1);
+        animationProgress1 = Mth.clamp(animationProgress1, 0, 1);
 
         if (animationProgress1 > 0) {
             double alpha = animationProgress1;
-            Color left = module.isActive()
-                ? new Color(190, 157, 235, (int) (190 * alpha))
-                : new Color(139, 116, 170, (int) (105 * alpha));
-            Color right = module.isActive()
-                ? new Color(126, 83, 184, (int) (210 * alpha))
-                : new Color(91, 72, 119, (int) (125 * alpha));
+            Color left = new Color(205, 198, 216, (int) (205 * alpha));
+            Color right = new Color(116, 103, 137, (int) (220 * alpha));
             double radius = Math.min(height, width) / 2;
             double middleWidth = Math.max(0, width - height);
             renderer.quad(x + radius, y, middleWidth, height, left, right);
@@ -89,11 +85,7 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
         }
 
         double textX = this.x + pad + theme.scale(2);
-        if (theme.moduleAlignment.get() == AlignmentX.Center) {
-            textX = this.x + width / 2 - titleWidth / 2;
-        } else if (theme.moduleAlignment.get() == AlignmentX.Right) {
-            textX = this.x + width - pad - titleWidth;
-        }
+        // Keep module names left-aligned to match the compact reference layout.
         renderer.text(title, textX, y + (height - theme.textHeight()) / 2, theme.textColor.get(), false);
     }
 }
