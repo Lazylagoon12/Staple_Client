@@ -9,7 +9,6 @@ import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.themes.meteor.MeteorGuiTheme;
 import meteordevelopment.meteorclient.gui.themes.meteor.MeteorWidget;
 import meteordevelopment.meteorclient.gui.utils.AlignmentX;
-import meteordevelopment.meteorclient.gui.utils.AlignmentX;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
