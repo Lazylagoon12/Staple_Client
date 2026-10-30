@@ -73,12 +73,17 @@ public class WMeteorModule extends WPressable implements MeteorWidget {
         animationProgress2 = Mth.clamp(animationProgress2, 0, 1);
         Color base = new Color(48, 43, 57, 112);
         Color hover = new Color(178, 168, 190, 105);
-        renderer.quad(x, y, width, height, base, mouseOver ? hover : base);
+        renderer.quad(x + height / 2, y, width - height, height, base, mouseOver ? hover : base);
+        renderer.quad(x, y, height, height, GuiRenderer.CIRCLE, base);
+        renderer.quad(x + width - height, y, height, height, GuiRenderer.CIRCLE, mouseOver ? hover : base);
         renderer.quad(x, y, width, theme.scale(1), new Color(225, 218, 235, 95));
         if (animationProgress1 > 0) {
-            renderer.quad(x, y, width * animationProgress1, height,
-                new Color(194, 184, 207, (int) (105 * animationProgress1)),
-                new Color(127, 113, 145, (int) (135 * animationProgress1)));
+            Color activeLeft = new Color(194, 184, 207, (int) (105 * animationProgress1));
+            Color activeRight = new Color(127, 113, 145, (int) (135 * animationProgress1));
+            double activeWidth = width * animationProgress1;
+            renderer.quad(x + height / 2, y, Math.max(0, activeWidth - height), height, activeLeft, activeRight);
+            renderer.quad(x, y, height, height, GuiRenderer.CIRCLE, activeLeft);
+            if (activeWidth >= height) renderer.quad(x + activeWidth - height, y, height, height, GuiRenderer.CIRCLE, activeRight);
         }
         if (animationProgress2 > 0) {
             renderer.quad(x, y + height - theme.scale(2), width * animationProgress2, theme.scale(2),
