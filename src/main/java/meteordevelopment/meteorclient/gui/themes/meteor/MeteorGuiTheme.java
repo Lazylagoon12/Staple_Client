@@ -63,7 +63,7 @@ public class MeteorGuiTheme extends GuiTheme {
     public final Setting<AlignmentX> moduleAlignment = sgGeneral.add(new EnumSetting.Builder<AlignmentX>()
         .name("module-alignment")
         .description("How module titles are aligned.")
-        .defaultValue(AlignmentX.Center)
+        .defaultValue(AlignmentX.Left)
         .build()
     );
 
@@ -77,7 +77,7 @@ public class MeteorGuiTheme extends GuiTheme {
     public final Setting<Boolean> modulesHelpText = sgGeneral.add(new BoolSetting.Builder()
         .name("modules-help-text")
         .description("Toggle help text in the modules screen.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
