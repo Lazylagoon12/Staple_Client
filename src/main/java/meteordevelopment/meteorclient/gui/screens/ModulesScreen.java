@@ -277,7 +277,7 @@ public class ModulesScreen extends TabScreen {
                 else if (module.category.equals(Categories.World)) world.add(module);
                 else if (module.category.equals(Categories.Player)) player.add(module);
                 else if (module.category.equals(Categories.Misc)) {
-                    if (name.toLowerCase().contains("cosmetic") || name.equals("Discord Presence")) cosmetics.add(module);
+                    if (name.toLowerCase().contains("cosmetic") || name.equals("Discord Presence") || name.equals("Better Chat")) cosmetics.add(module);
                     else client.add(module);
                 } else client.add(module);
             }
