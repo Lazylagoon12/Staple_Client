@@ -1,0 +1,32 @@
+name: ClickGUI Build Check
+
+on:
+  push:
+    branches:
+      - staple-purple-clickgui
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+      - name: Build
+        run: ./gradlew build
+      - name: Upload JAR
+        uses: actions/upload-artifact@v6
+        with:
+          name: staple-client-clickgui
+          path: build/libs/*.jar
+          if-no-files-found: error
