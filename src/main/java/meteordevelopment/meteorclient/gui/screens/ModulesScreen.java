@@ -296,6 +296,10 @@ public class ModulesScreen extends TabScreen {
                         widget.height = theme.scale(24);
                     }
                     widget.calculateSize();
+                    if (widget == searchBox) {
+                        widget.width = width - pad * 2 - leftW - rightW - gap * 2;
+                        widget.height = theme.scale(30);
+                    }
                     widget.calculateWidgetPositions();
                 }
                 moduleGrid.layoutCards();
