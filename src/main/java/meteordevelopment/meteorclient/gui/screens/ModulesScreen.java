@@ -308,6 +308,7 @@ public class ModulesScreen extends TabScreen {
                     cell.y = y + (i / 2) * theme.scale(62);
                     cell.width = cardW;
                     cell.height = theme.scale(52);
+                    cell.alignWidget();
                     cell.widget().calculateSize();
                     cell.widget().width = cardW;
                     cell.widget().height = theme.scale(52);
