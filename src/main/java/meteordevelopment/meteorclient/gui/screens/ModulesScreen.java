@@ -302,7 +302,6 @@ public class ModulesScreen extends TabScreen {
                     }
                     widget.calculateWidgetPositions();
                 }
-                moduleGrid.layoutCards();
             }
         }
 
