@@ -333,7 +333,7 @@ public class ModulesScreen extends TabScreen {
             @Override
             protected void onRender(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double mouseX, double mouseY, double delta) {
                 drawPill(renderer, x, y, width, height, active || mouseOver);
-                renderer.text(label, x + theme.scale(14), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
+                renderer.text(label, x + theme.scale(14), y + (height - theme.textHeight()) / 2, theme.textColor.get(), true);
             }
         }
 
