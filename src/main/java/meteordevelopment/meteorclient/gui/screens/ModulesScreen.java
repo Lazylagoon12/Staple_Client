@@ -162,6 +162,7 @@ public class ModulesScreen extends TabScreen {
         private final List<Module> allModules = new ArrayList<>();
         private final WMainPanel panel;
         private final WModuleGrid moduleGrid;
+        private WTextBox searchBox;
         private String selected = "Combat";
 
         WCategoryController() {
@@ -177,6 +178,8 @@ public class ModulesScreen extends TabScreen {
 
             add(panel);
             panel.add(theme.label("STAPLE CLIENT", true)).widget();
+            searchBox = panel.add(theme.textBox("Search modules...")).widget();
+            searchBox.action = () -> select(selected);
             for (String category : List.of("Combat", "Movement", "Render", "Player", "World", "Misc")) {
                 WNavButton button = panel.add(new WNavButton(category, () -> select(category))).widget();
                 navButtons.add(button);
@@ -204,7 +207,9 @@ public class ModulesScreen extends TabScreen {
                 boolean matches = category.equals("Misc")
                     ? !List.of("Combat", "Movement", "Render", "Player", "World").contains(moduleCategory)
                     : moduleCategory.equalsIgnoreCase(category);
-                if (matches) moduleGrid.add(theme.module(module)).expandX();
+                String query = searchBox == null ? "" : searchBox.get().trim().toLowerCase();
+                boolean matchesSearch = query.isEmpty() || module.title.toLowerCase().contains(query) || module.name.toLowerCase().contains(query);
+                if (matches && matchesSearch) moduleGrid.add(theme.module(module)).expandX();
             }
             invalidate();
         }
@@ -268,6 +273,11 @@ public class ModulesScreen extends TabScreen {
                         widget.y = y + theme.scale(92) + index * theme.scale(49);
                         widget.width = leftW;
                         widget.height = theme.scale(40);
+                    } else if (widget == searchBox) {
+                        widget.x = x + pad + leftW + gap;
+                        widget.y = y + theme.scale(26);
+                        widget.width = width - pad * 2 - leftW - rightW - gap * 2;
+                        widget.height = theme.scale(30);
                     } else if (widget == moduleGrid) {
                         widget.x = x + pad + leftW + gap;
                         widget.y = y + theme.scale(72);
