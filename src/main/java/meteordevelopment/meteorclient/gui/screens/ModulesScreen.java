@@ -256,7 +256,6 @@ public class ModulesScreen extends TabScreen {
                     height = ((cells.size() + 1) / 2) * (theme.scale(58) + gap);
                 }
             };
-            grid.spacing = 8;
             for (int i = 0; i < Math.max(first.size(), second.size()); i++) {
                 if (i < first.size()) grid.add(theme.module(first.get(i))).expandX();
                 if (i < second.size()) grid.add(theme.module(second.get(i))).expandX();
