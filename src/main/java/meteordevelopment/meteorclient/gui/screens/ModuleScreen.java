@@ -68,7 +68,7 @@ public class ModuleScreen extends WidgetScreen {
             panel.add(theme.label("From: " + module.addon.name).color(module.addon.color));
         }
 
-        settingsView = panel.add(theme.view()).expandX().widget();
+        settingsView = panel.add(new WSettingsView()).expandX().widget();
         settingsView.scrollOnlyWhenMouseOver = true;
         settingsView.hasScrollBar = true;
         if (!module.settings.groups.isEmpty()) settingsView.add(theme.settings(module.settings)).expandX();
@@ -161,6 +161,16 @@ public class ModuleScreen extends WidgetScreen {
             renderer.quad(x + width - r * 2, y, r * 2, r * 2, GuiRenderer.CIRCLE, edge);
             renderer.quad(x, y + height - r * 2, r * 2, r * 2, GuiRenderer.CIRCLE, base);
             renderer.quad(x + width - r * 2, y + height - r * 2, r * 2, r * 2, GuiRenderer.CIRCLE, edge);
+
+            // Staple's signature purple accent and subtle header divider.
+            double accentH = theme.scale(5);
+            Color accentLeft = new Color(111, 54, 220, 255);
+            Color accentRight = new Color(164, 105, 245, 255);
+            renderer.quad(x + r, y, width - r * 2, accentH, accentLeft, accentRight);
+            renderer.quad(x, y, r * 2, accentH, GuiRenderer.CIRCLE, accentLeft);
+            renderer.quad(x + width - r * 2, y, r * 2, accentH, GuiRenderer.CIRCLE, accentRight);
+            renderer.quad(x + theme.scale(20), y + theme.scale(48), width - theme.scale(40), 1,
+                new Color(102, 78, 140, 150), new Color(102, 78, 140, 35));
         }
 
         @Override
@@ -193,6 +203,22 @@ public class ModuleScreen extends WidgetScreen {
                 w.calculateWidgetPositions();
                 cy += w.height + theme.scale(10);
             }
+        }
+    }
+
+    private static class WSettingsView extends WView {
+        @Override
+        protected void onRender(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
+            double r = theme.scale(12);
+            Color left = new Color(21, 19, 34, 220);
+            Color right = new Color(31, 25, 48, 220);
+            renderer.quad(x + r, y, width - r * 2, height, left, right);
+            renderer.quad(x, y + r, r * 2, height - r * 2, left);
+            renderer.quad(x + width - r * 2, y + r, r * 2, height - r * 2, right);
+            renderer.quad(x, y, r * 2, r * 2, GuiRenderer.CIRCLE, left);
+            renderer.quad(x + width - r * 2, y, r * 2, r * 2, GuiRenderer.CIRCLE, right);
+            renderer.quad(x, y + height - r * 2, r * 2, r * 2, GuiRenderer.CIRCLE, left);
+            renderer.quad(x + width - r * 2, y + height - r * 2, r * 2, r * 2, GuiRenderer.CIRCLE, right);
         }
     }
 }
