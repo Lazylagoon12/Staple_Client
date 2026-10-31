@@ -185,10 +185,9 @@ public class ModulesScreen extends TabScreen {
                 navButtons.add(button);
             }
             panel.add(moduleGrid);
-            addAction("Top Bar", () -> Tabs.get(GuiTab.class).openScreen(theme));
             addAction("Configs", () -> Tabs.get(ConfigTab.class).openScreen(theme));
             addAction("Modules", () -> select("Combat"));
-            addAction("ClickGUI", () -> Tabs.get(GuiTab.class).openScreen(theme));
+            addAction("ClickGUI", () -> select(selected));
             addAction("Themes", () -> Tabs.get(GuiTab.class).openScreen(theme));
             addAction("Settings", () -> Tabs.get(ConfigTab.class).openScreen(theme));
             select("Combat");
