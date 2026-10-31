@@ -272,6 +272,15 @@ public class ModulesScreen extends TabScreen {
             invalidate();
         }
 
+        @Override
+        protected void onCalculateSize() {
+            // This controller owns an absolute-positioned full-screen layout.
+            // Give it real bounds so its children are not clipped to the first
+            // category button's natural size.
+            width = getWindowWidth();
+            height = getWindowHeight();
+        }
+
         protected void refresh() {
             if (favorites == null) {
                 boolean hasFavorites = Modules.get().getAll().stream().anyMatch(module -> module.favorite);
