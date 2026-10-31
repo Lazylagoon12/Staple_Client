@@ -157,205 +157,167 @@ public class ModulesScreen extends TabScreen {
     }
 
     private class WCategoryController extends WContainer {
-        private final List<WWindow> categoryWindows = new ArrayList<>();
-        private final List<WNavButton> categoryButtons = new ArrayList<>();
-        private Cell<WWindow> favorites;
+        private final List<WNavButton> navButtons = new ArrayList<>();
+        private final List<WPanelAction> actions = new ArrayList<>();
+        private final List<Module> allModules = new ArrayList<>();
+        private final WMainPanel panel;
+        private final WModuleGrid moduleGrid;
         private String selected = "Combat";
 
-        @Override
-        protected boolean propagateEvents(WWidget widget) {
-            return widget.visible;
+        WCategoryController() {
+            panel = new WMainPanel();
+            moduleGrid = new WModuleGrid();
         }
 
         @Override
         public void init() {
-            List<Module> all = new ArrayList<>();
             for (Module module : Modules.get().getAll()) {
-                if (!Config.get().hiddenModules.get().contains(module)) all.add(module);
+                if (!Config.get().hiddenModules.get().contains(module)) allModules.add(module);
             }
 
-            List<Module> combat = new ArrayList<>();
-            List<Module> movement = new ArrayList<>();
-            List<Module> render = new ArrayList<>();
-            List<Module> player = new ArrayList<>();
-            List<Module> world = new ArrayList<>();
-            List<Module> misc = new ArrayList<>();
-
-            for (Module module : all) {
-                if (module.category.equals(Categories.Combat)) combat.add(module);
-                else if (module.category.equals(Categories.Movement)) movement.add(module);
-                else if (module.category.equals(Categories.Render)) render.add(module);
-                else if (module.category.equals(Categories.Player)) player.add(module);
-                else if (module.category.equals(Categories.World)) world.add(module);
-                else misc.add(module);
+            add(panel);
+            panel.add(theme.label("STAPLE CLIENT", true)).widget();
+            for (String category : List.of("Combat", "Movement", "Render", "Player", "World", "Misc")) {
+                WNavButton button = panel.add(new WNavButton(category, () -> select(category))).widget();
+                navButtons.add(button);
             }
-
-            addCategory("Combat", combat);
-            addCategory("Movement", movement);
-            addCategory("Render", render);
-            addCategory("Player", player);
-            addCategory("World", world);
-            addCategory("Misc", misc);
-
-            add(new WPanelAction("Top Bar", () -> Tabs.get(GuiTab.class).openScreen(theme)));
-            add(new WPanelAction("Configs", () -> Tabs.get(ConfigTab.class).openScreen(theme)));
-            add(new WPanelAction("Modules", () -> select("Combat")));
-            add(new WPanelAction("ClickGUI", () -> Tabs.get(GuiTab.class).openScreen(theme)));
-            add(new WPanelAction("Themes", () -> Tabs.get(GuiTab.class).openScreen(theme)));
-            add(new WPanelAction("Settings", () -> Tabs.get(ConfigTab.class).openScreen(theme)));
-
-            createSearch(this);
-            refresh();
+            panel.add(moduleGrid);
+            addAction("Top Bar", () -> Tabs.get(GuiTab.class).openScreen(theme));
+            addAction("Configs", () -> Tabs.get(ConfigTab.class).openScreen(theme));
+            addAction("Modules", () -> select("Combat"));
+            addAction("ClickGUI", () -> Tabs.get(GuiTab.class).openScreen(theme));
+            addAction("Themes", () -> Tabs.get(GuiTab.class).openScreen(theme));
+            addAction("Settings", () -> Tabs.get(ConfigTab.class).openScreen(theme));
+            select("Combat");
         }
 
-        private void addCategory(String name, List<Module> modules) {
-            WNavButton button = add(new WNavButton(name, () -> select(name))).widget();
-            button.active = name.equals(selected);
-            categoryButtons.add(button);
-
-            WWindow window = theme.window(name);
-            window.id = "staple-" + name.toLowerCase();
-            window.padding = 5;
-            window.spacing = 7;
-            window.visible = name.equals(selected);
-            window.view.scrollOnlyWhenMouseOver = true;
-            window.view.hasScrollBar = true;
-            window.view.spacing = 7;
-            window.minWidth = 220;
-
-            List<Module> first = new ArrayList<>();
-            List<Module> second = new ArrayList<>();
-            for (int i = 0; i < modules.size(); i++) {
-                (i % 2 == 0 ? first : second).add(modules.get(i));
-            }
-
-            WContainer grid = new WContainer() {
-                @Override
-                protected void onCalculateSize() {
-                    width = 0;
-                    height = 0;
-                    for (Cell<?> cell : cells) width += cell.widget().width;
-                    height = ((cells.size() + 1) / 2) * (theme.scale(58) + theme.scale(8));
-                }
-
-                @Override
-                protected void onCalculateWidgetPositions() {
-                    double gap = theme.scale(8);
-                    double cardWidth = Math.max(theme.scale(150), (width - gap) / 2);
-                    double leftX = x;
-                    double rightX = x + cardWidth + gap;
-                    for (int i = 0; i < cells.size(); i++) {
-                        Cell<?> cell = cells.get(i);
-                        cell.x = (i % 2 == 0 ? leftX : rightX);
-                        cell.y = y + (i / 2) * (theme.scale(58) + gap);
-                        cell.width = cardWidth;
-                        cell.height = cell.widget().height;
-                        cell.alignWidget();
-                        cell.widget().calculateWidgetPositions();
-                    }
-                    height = ((cells.size() + 1) / 2) * (theme.scale(58) + gap);
-                }
-            };
-            for (int i = 0; i < Math.max(first.size(), second.size()); i++) {
-                if (i < first.size()) grid.add(theme.module(first.get(i))).expandX();
-                if (i < second.size()) grid.add(theme.module(second.get(i))).expandX();
-            }
-            window.add(grid).expandX();
-            add(window);
-            categoryWindows.add(window);
+        private void addAction(String label, Runnable action) {
+            actions.add(panel.add(new WPanelAction(label, action)).widget());
         }
 
-        private void select(String name) {
-            selected = name;
-            for (WWindow window : categoryWindows) window.visible = window.id.equals("staple-" + name.toLowerCase());
-            for (WNavButton button : categoryButtons) button.active = button.label.equals(name);
+        private void select(String category) {
+            selected = category;
+            for (WNavButton button : navButtons) button.active = button.label.equals(category);
+            moduleGrid.clear();
+            for (Module module : allModules) {
+                String moduleCategory = module.category.name;
+                boolean matches = category.equals("Misc")
+                    ? !List.of("Combat", "Movement", "Render", "Player", "World").contains(moduleCategory)
+                    : moduleCategory.equalsIgnoreCase(category);
+                if (matches) moduleGrid.add(theme.module(module)).expandX();
+            }
             invalidate();
         }
 
         @Override
         protected void onCalculateSize() {
-            // This controller owns an absolute-positioned full-screen layout.
-            // Give it real bounds so its children are not clipped to the first
-            // category button's natural size.
             width = getWindowWidth();
             height = getWindowHeight();
         }
 
-        protected void refresh() {
-            if (favorites == null) {
-                boolean hasFavorites = Modules.get().getAll().stream().anyMatch(module -> module.favorite);
-                if (hasFavorites) {
-                    WWindow window = theme.window("Favorites");
-                    window.id = "favorites";
-                    window.padding = 5;
-                    window.spacing = 6;
-                    favorites = add(window);
-                    window.view.scrollOnlyWhenMouseOver = true;
-                    window.view.hasScrollBar = true;
-                    for (Module module : Modules.get().getAll()) if (module.favorite) window.add(theme.module(module)).expandX();
+        @Override
+        protected void onCalculateWidgetPositions() {
+            double screenW = getWindowWidth();
+            double screenH = getWindowHeight();
+            double panelW = Math.min(theme.scale(1120), screenW - theme.scale(48));
+            double panelH = Math.min(theme.scale(720), screenH - theme.scale(48));
+            panel.x = (screenW - panelW) / 2;
+            panel.y = (screenH - panelH) / 2;
+            panel.width = panelW;
+            panel.height = panelH;
+            panel.calculateSize();
+            panel.calculateWidgetPositions();
+        }
+
+        private class WMainPanel extends WContainer {
+            @Override
+            protected void onRender(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double mouseX, double mouseY, double delta) {
+                double radius = theme.scale(18);
+                double x0 = x, y0 = y, w = width, h = height;
+                meteordevelopment.meteorclient.utils.render.color.Color base = new meteordevelopment.meteorclient.utils.render.color.Color(29, 25, 45, 242);
+                meteordevelopment.meteorclient.utils.render.color.Color edge = new meteordevelopment.meteorclient.utils.render.color.Color(53, 43, 78, 242);
+                renderer.quad(x0 + radius, y0, w - radius * 2, h, base, edge);
+                renderer.quad(x0, y0 + radius, radius * 2, h - radius * 2, base);
+                renderer.quad(x0 + w - radius * 2, y0 + radius, radius * 2, h - radius * 2, edge);
+                renderer.quad(x0, y0, radius * 2, radius * 2, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, base);
+                renderer.quad(x0 + w - radius * 2, y0, radius * 2, radius * 2, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, edge);
+                renderer.quad(x0, y0 + h - radius * 2, radius * 2, radius * 2, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, base);
+                renderer.quad(x0 + w - radius * 2, y0 + h - radius * 2, radius * 2, radius * 2, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, edge);
+                renderer.quad(x0 + theme.scale(174), y0 + theme.scale(20), theme.scale(1), h - theme.scale(40), new meteordevelopment.meteorclient.utils.render.color.Color(120, 105, 151, 100));
+                renderer.quad(x0 + w - theme.scale(205), y0 + theme.scale(20), theme.scale(1), h - theme.scale(40), new meteordevelopment.meteorclient.utils.render.color.Color(120, 105, 151, 100));
+            }
+
+            @Override
+            protected void onCalculateSize() {
+                width = Math.min(theme.scale(1120), getWindowWidth() - theme.scale(48));
+                height = Math.min(theme.scale(720), getWindowHeight() - theme.scale(48));
+            }
+
+            @Override
+            protected void onCalculateWidgetPositions() {
+                double pad = theme.scale(24);
+                double gap = theme.scale(14);
+                double leftW = theme.scale(150);
+                double rightW = theme.scale(180);
+                for (int i = 0; i < cells.size(); i++) {
+                    Cell<?> cell = cells.get(i);
+                    WWidget widget = cell.widget();
+                    if (widget instanceof WNavButton) {
+                        int index = navButtons.indexOf(widget);
+                        widget.x = x + pad;
+                        widget.y = y + theme.scale(92) + index * theme.scale(49);
+                        widget.width = leftW;
+                        widget.height = theme.scale(40);
+                    } else if (widget == moduleGrid) {
+                        widget.x = x + pad + leftW + gap;
+                        widget.y = y + theme.scale(72);
+                        widget.width = width - pad * 2 - leftW - rightW - gap * 2;
+                        widget.height = height - theme.scale(96);
+                    } else if (widget instanceof WPanelAction) {
+                        int index = actions.indexOf(widget);
+                        widget.x = x + width - pad - rightW;
+                        widget.y = y + theme.scale(92) + index * theme.scale(52);
+                        widget.width = rightW;
+                        widget.height = theme.scale(40);
+                    } else {
+                        widget.x = x + pad;
+                        widget.y = y + theme.scale(28);
+                        widget.width = theme.scale(150);
+                        widget.height = theme.scale(24);
+                    }
+                    widget.calculateSize();
+                    widget.calculateWidgetPositions();
                 }
+                moduleGrid.layoutCards();
             }
         }
 
-        @Override
-        protected void onCalculateWidgetPositions() {
-            double pad = theme.scale(18);
-            double gap = theme.scale(14);
-            double screenW = getWindowWidth();
-            double screenH = getWindowHeight();
-            double leftW = theme.scale(164);
-            double rightW = theme.scale(210);
-            double centerX = pad + leftW + gap;
-            double centerW = Math.max(theme.scale(300), screenW - centerX - rightW - gap - pad);
-            double top = theme.scale(72);
-            double bottom = screenH - theme.scale(24);
-            double contentH = bottom - top;
-
-            for (int i = 0; i < categoryButtons.size(); i++) {
-                WNavButton button = categoryButtons.get(i);
-                button.width = leftW;
-                button.height = theme.scale(42);
-                button.x = pad;
-                button.y = top + i * theme.scale(49);
-                button.calculateWidgetPositions();
+        private class WModuleGrid extends WContainer {
+            @Override
+            protected void onCalculateSize() {
+                width = Math.max(0, width);
+                height = Math.max(0, ((cells.size() + 1) / 2) * theme.scale(62));
             }
 
-            for (WWindow window : categoryWindows) {
-                window.x = centerX;
-                window.y = top;
-                window.width = centerW;
-                window.minWidth = centerW / theme.scale(1);
-                window.height = contentH;
-                window.calculateSize();
-                window.width = centerW;
-                window.height = contentH;
-                window.calculateWidgetPositions();
-            }
-
-            int actionIndex = 0;
-            for (Cell<?> cell : cells) {
-                if (cell.widget() instanceof WPanelAction action) {
-                    action.x = screenW - pad - rightW;
-                    action.y = top + theme.scale(46) + actionIndex * theme.scale(54);
-                    action.width = rightW;
-                    action.height = theme.scale(44);
-                    action.calculateWidgetPositions();
-                    actionIndex++;
-                } else if (cell.widget() instanceof WWindow window && "search".equals(window.id)) {
-                    window.x = centerX;
-                    window.y = theme.scale(18);
-                    window.width = centerW;
-                    window.minWidth = centerW / theme.scale(1);
-                    window.calculateSize();
-                    window.calculateWidgetPositions();
-                } else if (cell.widget() instanceof WWindow window && "favorites".equals(window.id)) {
-                    window.x = pad;
-                    window.y = screenH - theme.scale(70);
-                    window.width = leftW;
-                    window.minWidth = leftW / theme.scale(1);
-                    window.calculateSize();
-                    window.calculateWidgetPositions();
+            void layoutCards() {
+                double gap = theme.scale(10);
+                double cardW = Math.max(theme.scale(160), (width - gap) / 2);
+                for (int i = 0; i < cells.size(); i++) {
+                    Cell<?> cell = cells.get(i);
+                    cell.x = x + (i % 2) * (cardW + gap);
+                    cell.y = y + (i / 2) * theme.scale(62);
+                    cell.width = cardW;
+                    cell.height = theme.scale(52);
+                    cell.widget().calculateSize();
+                    cell.widget().width = cardW;
+                    cell.widget().height = theme.scale(52);
+                    cell.widget().calculateWidgetPositions();
                 }
+            }
+
+            @Override
+            protected void onCalculateWidgetPositions() {
+                layoutCards();
             }
         }
 
@@ -364,21 +326,14 @@ public class ModulesScreen extends TabScreen {
             private final Runnable action;
             private boolean active;
 
-            private WNavButton(String label, Runnable action) {
-                this.label = label;
-                this.action = action;
-            }
+            WNavButton(String label, Runnable action) { this.label = label; this.action = action; }
 
-            @Override
-            protected void onPressed(int button) {
-                if (button == MOUSE_BUTTON_LEFT) action.run();
-            }
+            @Override protected void onPressed(int button) { if (button == MOUSE_BUTTON_LEFT) action.run(); }
 
             @Override
             protected void onRender(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double mouseX, double mouseY, double delta) {
-                boolean selected = active || mouseOver;
-                ColorPair.draw(renderer, x, y, width, height, selected);
-                renderer.text(label, x + theme.scale(16), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
+                drawPill(renderer, x, y, width, height, active || mouseOver);
+                renderer.text(label, x + theme.scale(14), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
             }
         }
 
@@ -386,36 +341,29 @@ public class ModulesScreen extends TabScreen {
             private final String label;
             private final Runnable action;
 
-            private WPanelAction(String label, Runnable action) {
-                this.label = label;
-                this.action = action;
-            }
+            WPanelAction(String label, Runnable action) { this.label = label; this.action = action; }
 
-            @Override
-            protected void onPressed(int button) {
-                if (button == MOUSE_BUTTON_LEFT) action.run();
-            }
+            @Override protected void onPressed(int button) { if (button == MOUSE_BUTTON_LEFT) action.run(); }
 
             @Override
             protected void onRender(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double mouseX, double mouseY, double delta) {
-                ColorPair.draw(renderer, x, y, width, height, mouseOver);
-                renderer.text(label, x + theme.scale(15), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
+                drawPill(renderer, x, y, width, height, mouseOver);
+                renderer.text(label, x + theme.scale(14), y + (height - theme.textHeight()) / 2, theme.textColor(), true);
             }
         }
-    }
 
-    private static class ColorPair {
-        private static void draw(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double x, double y, double width, double height, boolean active) {
+        private void drawPill(meteordevelopment.meteorclient.gui.renderer.GuiRenderer renderer, double x, double y, double width, double height, boolean active) {
             meteordevelopment.meteorclient.utils.render.color.Color left = active
-                ? new meteordevelopment.meteorclient.utils.render.color.Color(89, 36, 205, 235)
-                : new meteordevelopment.meteorclient.utils.render.color.Color(35, 31, 62, 225);
+                ? new meteordevelopment.meteorclient.utils.render.color.Color(91, 39, 194, 245)
+                : new meteordevelopment.meteorclient.utils.render.color.Color(43, 37, 62, 235);
             meteordevelopment.meteorclient.utils.render.color.Color right = active
-                ? new meteordevelopment.meteorclient.utils.render.color.Color(111, 62, 224, 235)
-                : new meteordevelopment.meteorclient.utils.render.color.Color(45, 39, 75, 225);
-            double radius = Math.min(height / 2, width / 2);
-            renderer.quad(x + radius, y, width - radius * 2, height, left, right);
+                ? new meteordevelopment.meteorclient.utils.render.color.Color(119, 69, 211, 245)
+                : new meteordevelopment.meteorclient.utils.render.color.Color(57, 48, 78, 235);
+            double r = height / 2;
+            renderer.quad(x + r, y, width - r * 2, height, left, right);
             renderer.quad(x, y, height, height, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, left);
             renderer.quad(x + width - height, y, height, height, meteordevelopment.meteorclient.gui.renderer.GuiRenderer.CIRCLE, right);
         }
     }
+
 }
