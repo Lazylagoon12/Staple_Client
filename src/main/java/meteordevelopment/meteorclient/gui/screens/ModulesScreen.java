@@ -27,6 +27,7 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.misc.NbtUtils;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.apache.commons.lang3.SystemUtils;
 import org.jspecify.annotations.NonNull;
 
@@ -45,6 +46,24 @@ public class ModulesScreen extends TabScreen {
 
     public ModulesScreen(GuiTheme theme) {
         super(theme, Tabs.get().getFirst());
+        // Always play the entrance animation when the ClickGUI is opened.
+        animProgress = 0;
+    }
+
+    @Override
+    public void renderCustom(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        double progress = Math.max(0, Math.min(1, animProgress));
+        // Smooth ease-out pop: scale from 94% to full size around the screen center.
+        double eased = 1 - Math.pow(1 - progress, 3);
+        float scale = (float) (0.94 + 0.06 * eased);
+        float centerX = getWindowWidth() / 2.0f;
+        float centerY = getWindowHeight() / 2.0f;
+
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(centerX * (1 - scale), centerY * (1 - scale));
+        graphics.pose().scale(scale, scale);
+        super.renderCustom(graphics, mouseX, mouseY, delta);
+        graphics.pose().popMatrix();
     }
 
     @Override
