@@ -16,6 +16,7 @@ import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.gui.widgets.containers.WSection;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
+import meteordevelopment.meteorclient.gui.widgets.containers.WView;
 import meteordevelopment.meteorclient.gui.widgets.containers.WWindow;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
@@ -207,7 +208,7 @@ public class ModulesScreen extends TabScreen {
                     : moduleCategory.equalsIgnoreCase(category);
                 String query = searchBox == null ? "" : searchBox.get().trim().toLowerCase();
                 boolean matchesSearch = query.isEmpty() || module.title.toLowerCase().contains(query) || module.name.toLowerCase().contains(query);
-                if (matches && matchesSearch) moduleGrid.add(theme.module(module)).expandX();
+                if (matches && matchesSearch) moduleGrid.addModule(theme.module(module));
             }
             invalidate();
         }
@@ -281,6 +282,7 @@ public class ModulesScreen extends TabScreen {
                         widget.y = y + theme.scale(72);
                         widget.width = width - pad * 2 - leftW - rightW - gap * 2;
                         widget.height = height - theme.scale(96);
+                        moduleGrid.maxHeight = widget.height;
                     } else if (widget instanceof WPanelAction) {
                         int index = actions.indexOf(widget);
                         widget.x = x + width - pad - rightW;
@@ -304,33 +306,61 @@ public class ModulesScreen extends TabScreen {
             }
         }
 
-        private class WModuleGrid extends WContainer {
-            @Override
-            protected void onCalculateSize() {
-                width = Math.max(0, width);
-                height = Math.max(0, ((cells.size() + 1) / 2) * theme.scale(62));
+        private class WModuleGrid extends WView {
+            private WModuleRow currentRow;
+
+            WModuleGrid() {
+                spacing = 10;
+                scrollOnlyWhenMouseOver = true;
+                hasScrollBar = true;
             }
 
-            void layoutCards() {
-                double gap = theme.scale(10);
-                double cardW = Math.max(theme.scale(160), (width - gap) / 2);
-                for (int i = 0; i < cells.size(); i++) {
-                    Cell<?> cell = cells.get(i);
-                    cell.x = x + (i % 2) * (cardW + gap);
-                    cell.y = y + (i / 2) * theme.scale(62);
-                    cell.width = cardW;
-                    cell.height = theme.scale(52);
-                    cell.alignWidget();
-                    cell.widget().calculateSize();
-                    cell.widget().width = cardW;
-                    cell.widget().height = theme.scale(52);
-                    cell.widget().calculateWidgetPositions();
+            void addModule(WWidget moduleCard) {
+                if (currentRow == null || currentRow.cells.size() == 2) {
+                    currentRow = new WModuleRow();
+                    add(currentRow).expandX();
+                }
+                currentRow.add(moduleCard).expandX();
+                invalidate();
+            }
+
+            @Override
+            public void clear() {
+                super.clear();
+                currentRow = null;
+            }
+
+            private class WModuleRow extends WContainer {
+                @Override
+                protected void onCalculateSize() {
+                    width = 0;
+                    height = theme.scale(52);
+                }
+
+                @Override
+                protected void onCalculateWidgetPositions() {
+                    double gap = theme.scale(10);
+                    double cardW = Math.max(0, (width - gap) / 2);
+                    for (int i = 0; i < cells.size(); i++) {
+                        Cell<?> cell = cells.get(i);
+                        cell.x = x + i * (cardW + gap);
+                        cell.y = y;
+                        cell.width = cardW;
+                        cell.height = height;
+                        cell.widget().calculateSize();
+                        cell.widget().x = cell.x;
+                        cell.widget().y = cell.y;
+                        cell.widget().width = cardW;
+                        cell.widget().height = height;
+                        cell.widget().calculateWidgetPositions();
+                    }
                 }
             }
 
             @Override
             protected void onCalculateWidgetPositions() {
-                layoutCards();
+                super.onCalculateWidgetPositions();
+                for (Cell<?> cell : cells) cell.widget().calculateWidgetPositions();
             }
         }
 
