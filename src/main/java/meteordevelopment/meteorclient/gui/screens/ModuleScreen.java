@@ -61,6 +61,7 @@ public class ModuleScreen extends WidgetScreen {
     @Override
     public void initWidgets() {
         WSettingsPanel panel = add(new WSettingsPanel()).widget();
+        panel.add(new WCategorySidebar());
         panel.add(theme.label("STAPLE CLIENT", true));
         panel.add(theme.label(module.title, true));
         if (module.description != null && !module.description.isBlank()) panel.add(theme.label(module.description));
@@ -184,24 +185,60 @@ public class ModuleScreen extends WidgetScreen {
             x = (getWindowWidth() - width) / 2;
             y = (getWindowHeight() - height) / 2;
             double pad = theme.scale(28);
+            double sidebarW = theme.scale(142);
+            double contentX = x + pad + sidebarW + theme.scale(22);
+            double contentW = width - pad * 2 - sidebarW - theme.scale(22);
             double cy = y + pad;
             for (int i = 0; i < cells.size(); i++) {
-                Cell<?> cell = cells.get(i);
-                WWidget w = cell.widget();
-                w.x = x + pad;
-                w.y = cy;
-                w.width = width - pad * 2;
-                if (w == settingsView) {
-                    w.height = Math.max(theme.scale(120), height - theme.scale(250));
-                } else if (w instanceof meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList) {
-                    w.height = theme.scale(34);
+                WWidget w = cells.get(i).widget();
+                if (w instanceof WCategorySidebar) {
+                    w.x = x + pad;
+                    w.y = y + pad;
+                    w.width = sidebarW;
+                    w.height = height - pad * 2;
                 } else {
-                    w.height = theme.scale(24);
+                    w.x = contentX;
+                    w.y = cy;
+                    w.width = contentW;
+                    if (w == settingsView) {
+                        w.height = Math.max(theme.scale(120), height - theme.scale(250));
+                    } else if (w instanceof meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList) {
+                        w.height = theme.scale(34);
+                    } else {
+                        w.height = theme.scale(24);
+                    }
                 }
                 w.calculateSize();
-                if (w == settingsView) w.height = Math.max(theme.scale(120), height - theme.scale(250));
+                if (w instanceof WCategorySidebar) {
+                    w.width = sidebarW;
+                    w.height = height - pad * 2;
+                } else if (w == settingsView) {
+                    w.height = Math.max(theme.scale(120), height - theme.scale(250));
+                }
                 w.calculateWidgetPositions();
-                cy += w.height + theme.scale(10);
+                if (!(w instanceof WCategorySidebar)) cy += w.height + theme.scale(10);
+            }
+        }
+    }
+
+    private class WCategorySidebar extends WWidget {
+        private final java.util.List<String> categories = java.util.List.of("Combat", "Player", "Movement", "Visuals", "Misc", "Exploits", "Client");
+
+        @Override
+        protected void onRender(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
+            double rowH = theme.scale(40);
+            double gap = theme.scale(9);
+            double yy = y + theme.scale(92);
+            for (String category : categories) {
+                boolean selected = module.category.name.equalsIgnoreCase(category);
+                Color left = selected ? new Color(105, 43, 205, 245) : new Color(43, 34, 61, 220);
+                Color right = selected ? new Color(145, 75, 225, 245) : new Color(55, 43, 75, 220);
+                double r = rowH / 2;
+                renderer.quad(x + r, yy, width - r * 2, rowH, left, right);
+                renderer.quad(x, yy, rowH, rowH, GuiRenderer.CIRCLE, left);
+                renderer.quad(x + width - rowH, yy, rowH, rowH, GuiRenderer.CIRCLE, right);
+                renderer.text(category, x + theme.scale(13), yy + (rowH - theme.textHeight()) / 2, theme.textColor(), true);
+                yy += rowH + gap;
             }
         }
     }
