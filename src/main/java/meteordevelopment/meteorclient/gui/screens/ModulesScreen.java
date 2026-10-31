@@ -178,7 +178,7 @@ public class ModulesScreen extends TabScreen {
 
             add(panel);
             panel.add(theme.label("STAPLE CLIENT", true)).widget();
-            searchBox = panel.add(theme.textBox("Search modules...")).widget();
+            searchBox = panel.add(theme.textBox("")).widget();
             searchBox.action = () -> select(selected);
             for (String category : List.of("Combat", "Movement", "Render", "Player", "World", "Misc")) {
                 WNavButton button = panel.add(new WNavButton(category, () -> select(category))).widget();
@@ -312,6 +312,13 @@ public class ModulesScreen extends TabScreen {
                 spacing = 10;
                 scrollOnlyWhenMouseOver = true;
                 hasScrollBar = true;
+            }
+
+            @Override
+            protected void onCalculateSize() {
+                double availableWidth = width;
+                super.onCalculateSize();
+                width = availableWidth;
             }
 
             void addModule(WWidget moduleCard) {
