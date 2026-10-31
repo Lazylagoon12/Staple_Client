@@ -6,6 +6,7 @@
 package meteordevelopment.meteorclient.gui.tabs;
 
 import meteordevelopment.meteorclient.gui.GuiTheme;
+import meteordevelopment.meteorclient.gui.screens.ModulesScreen;
 import net.minecraft.client.gui.screens.Screen;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -19,7 +20,7 @@ public abstract class Tab {
 
     public void openScreen(GuiTheme theme) {
         TabScreen screen = this.createScreen(theme);
-        screen.addDirect(theme.topBar()).top().centerX();
+        if (!(screen instanceof ModulesScreen)) screen.addDirect(theme.topBar()).top().centerX();
         mc.gui.setScreen(screen);
     }
 
